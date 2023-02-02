@@ -6,10 +6,17 @@ import (
 )
 
 /*
+#include <stddef.h>
+
 void* GC_malloc(unsigned int size);
 void GC_free(void* ptr);
 void GC_gcollect();
 void GC_set_on_collection_event(void* f);
+
+size_t GC_get_gc_no();
+void GC_get_heap_usage_safe(size_t* heap_size, size_t* free_bytes, size_t* unmapped_bytes, size_t* bytesSinceGC, size_t* totalBytes);
+size_t GC_get_obtained_from_os_bytes();
+void mi_process_info(size_t *elapsed_msecs, size_t *user_msecs, size_t *system_msecs, size_t *current_rss, size_t *peak_rss, size_t *current_commit, size_t *peak_commit, size_t *page_faults);
 
 void onCollectionEvent();
 */
@@ -68,5 +75,20 @@ func GC() {
 
 //go:linkname ReadMemStats runtime.ReadMemStats
 func ReadMemStats(ms *runtime.MemStats) {
-	// TODO: Implement
+	var heapSize, freeBytes, unmappedBytes, bytesSinceGC, totalBytes C.size_t
+	C.GC_get_heap_usage_safe(&heapSize, &freeBytes, &unmappedBytes, &bytesSinceGC, &totalBytes)
+
+	var peakRSS C.size_t
+	C.mi_process_info(nil, nil, nil, nil, &peakRSS, nil, nil, nil)
+
+	gcOSBytes := C.GC_get_obtained_from_os_bytes()
+
+	// Since the GC delegates to malloc/free for underlying pages, the total memory occupied by both C malloc/free and
+	// the GC is malloc's peak RSS itself. Because mimalloc does not return pages when run under wasm, peak/current RSS
+	// and commit are all the same value and we only record one.
+	ms.Sys = uint64(peakRSS)
+	ms.HeapSys = uint64(gcOSBytes)
+	ms.HeapIdle = uint64(freeBytes)
+	ms.HeapReleased = uint64(unmappedBytes)
+	ms.TotalAlloc = uint64(totalBytes)
 }
