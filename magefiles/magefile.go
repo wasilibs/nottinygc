@@ -19,7 +19,7 @@ func Format() error {
 		return err
 	}
 	if err := sh.RunV("go", "run", fmt.Sprintf("github.com/rinchsan/gosimports/cmd/gosimports@%s", gosImportsVer), "-w",
-		"-local", "github.com/wasilibs/go-re2",
+		"-local", "github.com/wasilibs/nottinygc",
 		"."); err != nil {
 		return nil
 	}

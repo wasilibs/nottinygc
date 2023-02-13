@@ -1,4 +1,4 @@
-module github.com/wasilibs/go-re2/magefiles
+module github.com/wasilibs/nottinygc/magefiles
 
 go 1.18
 
