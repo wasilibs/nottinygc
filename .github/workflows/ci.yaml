@@ -14,10 +14,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode:
-          - cgo
-          - tinygo
-          - wazero
         os:
           - macos-12
           - ubuntu-22.04
