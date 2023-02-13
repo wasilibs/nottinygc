@@ -1,6 +1,6 @@
 # nottinygc
 
-__This currently only works with an unreleased version of TinyGo__
+nottinygc requires TinyGo 0.27+
 
 nottinygc is a replacement memory allocator for TinyGo targetting WASI. The default allocator
 is built for small code size which can cause performance issues in higher-scale use cases.
