@@ -53,9 +53,21 @@ func UpdateLibs() error {
 	return nil
 }
 
-// Bench runs benchmarks in the default configuration for a Go app, using wazero.
+// Bench runs benchmarks.
 func Bench() error {
-	return sh.RunV("tinygo", "test", "-gc=custom", "-tags=custommalloc", "-target=wasi", "-v", "-scheduler=none", "-bench=.", "./...")
+	if err := os.MkdirAll("build", 0o755); err != nil {
+		return err
+	}
+
+	if err := sh.RunV("tinygo", "build", "-scheduler=none", "-target=wasi", "-o", "build/benchref.wasm", "./bench"); err != nil {
+		return err
+	}
+
+	if err := sh.RunV("tinygo", "build", "-gc=custom", "-tags=custommalloc", "-scheduler=none", "-target=wasi", "-o", "build/bench.wasm", "./bench"); err != nil {
+		return err
+	}
+
+	return sh.RunV("go", "test", "-bench=.", "-benchtime=10s", "./bench")
 }
 
 var Default = Test
