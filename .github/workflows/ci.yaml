@@ -40,7 +40,7 @@ jobs:
       - run: go run mage.go check
   build-tinygodev:
     runs-on: ubuntu-22.04
-    container: ghcr.io/tinygo-org/tinygo/tinygo-dev:sha-e0a5fc255522933f651a89c071ebd531ad634e7b
+    container: tinygo/tinygo-dev:sha-e0a5fc255522933f651a89c071ebd531ad634e7b
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
