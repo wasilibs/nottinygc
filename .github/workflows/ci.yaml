@@ -14,12 +14,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tinygodev:
-          - false
         os:
           - macos-12
           - ubuntu-22.04
           - windows-2022
+        tinygodev:
+          - false
         include:
           - os: ubuntu-22.04
             tinygodev: true
