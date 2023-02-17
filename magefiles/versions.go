@@ -1,7 +1,11 @@
+// Copyright wasilibs authors
+// SPDX-License-Identifier: MIT
+
 package main
 
 var (
-	golangCILintVer = "v1.50.1"
-	gofumptVersion  = "v0.4.0"
-	gosImportsVer   = "v0.3.4"
+	verAddLicense   = "v1.1.1"
+	verGolancCILint = "v1.50.1"
+	verGoFumpt      = "v0.4.0"
+	verGosImports   = "v0.3.4"
 )
