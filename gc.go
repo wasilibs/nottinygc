@@ -83,10 +83,7 @@ func ReadMemStats(ms *runtime.MemStats) {
 
 	gcOSBytes := C.GC_get_obtained_from_os_bytes()
 
-	// Since the GC delegates to malloc/free for underlying pages, the total memory occupied by both C malloc/free and
-	// the GC is malloc's peak RSS itself. Because mimalloc does not return pages when run under wasm, peak/current RSS
-	// and commit are all the same value and we only record one.
-	ms.Sys = uint64(peakRSS)
+	ms.Sys = uint64(peakRSS + gcOSBytes)
 	ms.HeapSys = uint64(gcOSBytes)
 	ms.HeapIdle = uint64(freeBytes)
 	ms.HeapReleased = uint64(unmappedBytes)
