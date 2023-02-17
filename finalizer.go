@@ -1,3 +1,5 @@
+//go:build nottinygc_finalizer
+
 package nottinygc
 
 /*
