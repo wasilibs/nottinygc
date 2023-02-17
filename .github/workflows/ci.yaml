@@ -23,7 +23,6 @@ jobs:
         include:
           - os: ubuntu-22.04
             tinygodev: true
-    container: ${{ matrix.tinygodev && 'ghcr.io/tinygo-org/tinygo/tinygo-dev:sha-e0a5fc255522933f651a89c071ebd531ad634e7b' }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -33,11 +32,20 @@ jobs:
 
       - name: setup tinygo
         uses: acifani/setup-tinygo@v1
-        if: ${{ !matrix.tinygodev }}
         with:
           tinygo-version: 0.27.0
       - name: setup wasmtime for tinygo
-        if: ${{ !matrix.tinygodev }}
         run: go install github.com/wasilibs/tools/cmd/wasmtime@c93d2e477ab3c1eb7f5303c66a35c84a21d06dbd
+
+      - run: go run mage.go check
+  build-tinygodev:
+    runs-on: ubuntu-22.04
+    container: ghcr.io/tinygo-org/tinygo/tinygo-dev:sha-e0a5fc255522933f651a89c071ebd531ad634e7b
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '^1.20.0'
+          cache: true
 
       - run: go run mage.go check
