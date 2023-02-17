@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,10 +28,23 @@ func Test() error {
 }
 
 func Format() error {
-	if err := sh.RunV("go", "run", fmt.Sprintf("mvdan.cc/gofumpt@%s", gofumptVersion), "-l", "-w", "."); err != nil {
+	if err := sh.RunV("go", "run", fmt.Sprintf("mvdan.cc/gofumpt@%s", verGoFumpt), "-l", "-w", "."); err != nil {
 		return err
 	}
-	if err := sh.RunV("go", "run", fmt.Sprintf("github.com/rinchsan/gosimports/cmd/gosimports@%s", gosImportsVer), "-w",
+
+	// addlicense strangely logs skipped files to stderr despite not being erroneous, so use the long sh.Exec form to
+	// discard stderr too.
+	if _, err := sh.Exec(map[string]string{}, io.Discard, io.Discard, "go", "run", fmt.Sprintf("github.com/google/addlicense@%s", verAddLicense),
+		"-c", "wasilibs authors",
+		"-l", "mit",
+		"-s=only",
+		"-y=",
+		"-ignore", "**/*.yaml",
+		"."); err != nil {
+		return err
+	}
+
+	if err := sh.RunV("go", "run", fmt.Sprintf("github.com/rinchsan/gosimports/cmd/gosimports@%s", verGosImports), "-w",
 		"-local", "github.com/wasilibs/nottinygc",
 		"."); err != nil {
 		return nil
@@ -37,8 +52,21 @@ func Format() error {
 	return nil
 }
 
+var errMissingCopyrightHeaders = errors.New("missing copyright headers, use go run mage.go format")
+
 func Lint() error {
-	return sh.RunV("go", "run", fmt.Sprintf("github.com/golangci/golangci-lint/cmd/golangci-lint@%s", golangCILintVer), "run")
+	if _, err := sh.Exec(map[string]string{}, io.Discard, io.Discard, "go", "run", fmt.Sprintf("github.com/google/addlicense@%s", verAddLicense),
+		"-check",
+		"-c", "wasilibs authors",
+		"-s=only",
+		"-l=mit",
+		"-y=",
+		"-ignore", "**/*.yaml",
+		"."); err != nil {
+		return errMissingCopyrightHeaders
+	}
+
+	return sh.RunV("go", "run", fmt.Sprintf("github.com/golangci/golangci-lint/cmd/golangci-lint@%s", verGolancCILint), "run")
 }
 
 // Check runs lint and tests.
