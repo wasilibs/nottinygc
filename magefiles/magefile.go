@@ -42,6 +42,7 @@ func Format() error {
 		"-l", "mit",
 		"-s=only",
 		"-y=",
+		"-ignore", "**/*.yml",
 		"-ignore", "**/*.yaml",
 		"."); err != nil {
 		return err
@@ -64,6 +65,7 @@ func Lint() error {
 		"-s=only",
 		"-l=mit",
 		"-y=",
+		"-ignore", "**/*.yml",
 		"-ignore", "**/*.yaml",
 		"."); err != nil {
 		return errMissingCopyrightHeaders
