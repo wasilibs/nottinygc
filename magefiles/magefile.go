@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
@@ -11,7 +12,17 @@ import (
 
 // Test runs unit tests
 func Test() error {
-	return sh.RunV("tinygo", "test", "-gc=custom", "-tags=custommalloc", "-target=wasi", "-v", "-scheduler=none", "./...")
+	v, err := sh.Output("tinygo", "version")
+	if err != nil {
+		return fmt.Errorf("invoking tinygo: %w", err)
+	}
+
+	tags := []string{"custommalloc"}
+	if strings.HasSuffix(v, "tinygo version 0.28.") {
+		tags = append(tags, "nottinygc_finalizer")
+	}
+
+	return sh.RunV("tinygo", "test", "-gc=custom", fmt.Sprintf("-tags='%s'", strings.Join(tags, " ")), "-target=wasi", "-v", "-scheduler=none", "./...")
 }
 
 func Format() error {
