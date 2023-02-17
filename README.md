@@ -26,6 +26,8 @@ Additionally, add `-gc=custom` and `-tags=custommalloc` to your TinyGo build fla
 tinygo build -o main.wasm -gc=custom -tags=custommalloc -target=wasi -scheduler=none main.go
 ```
 
+If using unreleased TinyGo 0.28+, you will also need to add the `nottinygc_finalizer` build tag.
+
 ## Performance
 
 Benchmarks are run against every commit in the [bench][4] workflow. GitHub action runners are highly
