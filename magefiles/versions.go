@@ -1,3 +1,6 @@
+// Copyright wasilibs authors
+// SPDX-License-Identifier: MIT
+
 package main
 
 var (
