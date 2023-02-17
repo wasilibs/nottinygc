@@ -48,6 +48,8 @@ jobs:
           go-version: '^1.20.0'
           cache: true
 
-      - run: go run mage.go check
+      - run: |
+          go install github.com/wasilibs/tools/cmd/wasmtime@c93d2e477ab3c1eb7f5303c66a35c84a21d06dbd
+          go run mage.go check
         env:
           GOFLAGS: -buildvcs=false
