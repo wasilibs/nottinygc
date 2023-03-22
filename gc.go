@@ -87,7 +87,7 @@ func ReadMemStats(ms *runtime.MemStats) {
 	gcOSBytes := C.GC_get_obtained_from_os_bytes()
 
 	ms.Sys = uint64(peakRSS + gcOSBytes)
-	ms.HeapSys = uint64(gcOSBytes)
+	ms.HeapSys = uint64(heapSize)
 	ms.HeapIdle = uint64(freeBytes)
 	ms.HeapReleased = uint64(unmappedBytes)
 	ms.TotalAlloc = uint64(totalBytes)
