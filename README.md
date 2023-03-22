@@ -28,6 +28,23 @@ tinygo build -o main.wasm -gc=custom -tags=custommalloc -target=wasi -scheduler=
 
 If using unreleased TinyGo 0.28+, you will also need to add the `nottinygc_finalizer` build tag.
 
+### Using with Envoy
+
+This library relies on WASI to implement certain functionality. Envoy's support for WASI is
+currently not complete so the library will not load in an application on Envoy as is. Notably,
+the `sched_yield` function is not implemented, which is used by mimalloc when returning memory
+to the OS. Because memory cannot be returned to the OS with Wasm, it is fine to stub this with
+a no-op as a workaround, which can be done with the following code anywhere in your application.
+
+```go
+//export sched_yield
+func sched_yield() int32 {
+	return 0
+}
+```
+
+Other hosts that implement WASI fully, such as [wazero][3], will not have this issue.
+
 ## Performance
 
 Benchmarks are run against every commit in the [bench][4] workflow. GitHub action runners are highly
@@ -49,4 +66,5 @@ possibly due to fragmentation, whereas this library will continue to run indefin
 
 [1]: https://github.com/ivmai/bdwgc
 [2]: https://github.com/microsoft/mimalloc
+[3]: https://github.com/tetratelabs/wazero
 [4]: https://github.com/wasilibs/nottinygc/actions/workflows/bench.yaml
