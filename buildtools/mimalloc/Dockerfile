@@ -1,5 +1,5 @@
-# Copyright The OWASP Coraza contributors
-# SPDX-License-Identifier: Apache-2.0
+# Copyright wasilibs authors
+# SPDX-License-Identifier: MIT
 
 FROM ghcr.io/webassembly/wasi-sdk:wasi-sdk-20
 
