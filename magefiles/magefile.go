@@ -4,6 +4,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -27,7 +28,19 @@ func Test() error {
 		tags = append(tags, "nottinygc_finalizer")
 	}
 
-	return sh.RunV("tinygo", "test", "-gc=custom", fmt.Sprintf("-tags='%s'", strings.Join(tags, " ")), "-target=wasi", "-v", "-scheduler=none", "./...")
+	if err := sh.RunV("tinygo", "test", "-gc=custom", fmt.Sprintf("-tags='%s'", strings.Join(tags, " ")), "-target=wasi", "-v", "-scheduler=none", "./..."); err != nil {
+		return err
+	}
+
+	var stdout bytes.Buffer
+	if _, err := sh.Exec(map[string]string{}, &stdout, io.Discard, "tinygo", "test", "-target=wasi", "-v", "-scheduler=none", "./..."); err == nil {
+		return errors.New("expected tinygo test to fail without -gc=custom")
+	}
+	if s := stdout.String(); !strings.Contains(s, "nottinygc requires passing -gc=custom and -tags=custommalloc to TinyGo when compiling") {
+		return fmt.Errorf("unexpected error message: %s", s)
+	}
+
+	return nil
 }
 
 func Format() error {
