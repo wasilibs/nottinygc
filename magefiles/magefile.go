@@ -40,6 +40,14 @@ func Test() error {
 		return fmt.Errorf("unexpected error message: %s", s)
 	}
 
+	if err := buildBenchExecutable(); err != nil {
+		return err
+	}
+
+	if err := sh.RunV("go", "test", "./bench"); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -69,8 +77,6 @@ func Format() error {
 	return nil
 }
 
-var errMissingCopyrightHeaders = errors.New("missing copyright headers, use go run mage.go format")
-
 func Lint() error {
 	if _, err := sh.Exec(map[string]string{}, io.Discard, io.Discard, "go", "run", fmt.Sprintf("github.com/google/addlicense@%s", verAddLicense),
 		"-check",
@@ -81,7 +87,7 @@ func Lint() error {
 		"-ignore", "**/*.yml",
 		"-ignore", "**/*.yaml",
 		"."); err != nil {
-		return errMissingCopyrightHeaders
+		return fmt.Errorf("missing copyright headers, use go run mage.go format: %w", err)
 	}
 
 	return sh.RunV("go", "run", fmt.Sprintf("github.com/golangci/golangci-lint/cmd/golangci-lint@%s", verGolancCILint), "run")
@@ -112,7 +118,7 @@ func UpdateLibs() error {
 
 // Bench runs benchmarks.
 func Bench() error {
-	if err := os.MkdirAll("build", 0o755); err != nil {
+	if err := buildBenchExecutable(); err != nil {
 		return err
 	}
 
@@ -120,11 +126,15 @@ func Bench() error {
 		return err
 	}
 
-	if err := sh.RunV("tinygo", "build", "-gc=custom", "-tags=custommalloc", "-scheduler=none", "-target=wasi", "-o", "build/bench.wasm", "./bench"); err != nil {
+	return sh.RunV("go", "test", "-bench=.", "-benchtime=10s", "./bench")
+}
+
+func buildBenchExecutable() error {
+	if err := os.MkdirAll("build", 0o755); err != nil {
 		return err
 	}
 
-	return sh.RunV("go", "test", "-bench=.", "-benchtime=10s", "./bench")
+	return sh.RunV("tinygo", "build", "-gc=custom", "-tags=custommalloc", "-scheduler=none", "-target=wasi", "-o", "build/bench.wasm", "./bench")
 }
 
 var Default = Test
