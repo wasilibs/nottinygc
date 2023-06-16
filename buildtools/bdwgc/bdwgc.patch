@@ -1,0 +1,13 @@
+diff --git a/include/private/gc_priv.h b/include/private/gc_priv.h
+index 1f4c15e9..94d7badc 100644
+--- a/include/private/gc_priv.h
++++ b/include/private/gc_priv.h
+@@ -1794,7 +1794,7 @@ GC_EXTERN size_t GC_page_size;
+ #ifdef MMAP_SUPPORTED
+ # define ROUNDUP_PAGESIZE_IF_MMAP(lb) ROUNDUP_PAGESIZE(lb)
+ #else
+-# define ROUNDUP_PAGESIZE_IF_MMAP(lb) (lb)
++# define ROUNDUP_PAGESIZE_IF_MMAP(lb) ROUNDUP_PAGESIZE(lb)
+ #endif
+ 
+ #if defined(MSWIN32) || defined(MSWINCE) || defined(CYGWIN32)

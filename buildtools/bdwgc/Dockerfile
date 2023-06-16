@@ -3,10 +3,12 @@
 
 FROM ghcr.io/webassembly/wasi-sdk:wasi-sdk-20
 
-RUN apt-get -y update && apt-get -y install curl
+RUN apt-get -y update && apt-get -y install curl patch
 
 RUN mkdir -p /bdwgc && curl -L https://github.com/ivmai/bdwgc/archive/0a1667bee7f2c004abda6ecd173cd80bfef8412c.tar.gz | tar -xz --strip-components 1 -C /bdwgc
 WORKDIR /bdwgc
+ADD bdwgc.patch .
+RUN patch -p1 < bdwgc.patch
 RUN ./autogen.sh
 
 # While signals aren't actually used the header file is included unconditionally. We can enable the header file
