@@ -4,6 +4,6 @@
 package nottinygc
 
 /*
-#cgo LDFLAGS: -Lwasm -lgc -lmimalloc -lclang_rt.builtins-wasm32
+#cgo LDFLAGS: -Lwasm -lgc -lmimalloc -lclang_rt.builtins-wasm32 --export=malloc --export=free
 */
 import "C"

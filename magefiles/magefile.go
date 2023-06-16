@@ -40,6 +40,14 @@ func Test() error {
 		return fmt.Errorf("unexpected error message: %s", s)
 	}
 
+	if err := buildBenchExecutable(); err != nil {
+		return err
+	}
+
+	if err := sh.RunV("go", "test", "./bench"); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -112,7 +120,7 @@ func UpdateLibs() error {
 
 // Bench runs benchmarks.
 func Bench() error {
-	if err := os.MkdirAll("build", 0o755); err != nil {
+	if err := buildBenchExecutable(); err != nil {
 		return err
 	}
 
@@ -120,11 +128,15 @@ func Bench() error {
 		return err
 	}
 
-	if err := sh.RunV("tinygo", "build", "-gc=custom", "-tags=custommalloc", "-scheduler=none", "-target=wasi", "-o", "build/bench.wasm", "./bench"); err != nil {
+	return sh.RunV("go", "test", "-bench=.", "-benchtime=10s", "./bench")
+}
+
+func buildBenchExecutable() error {
+	if err := os.MkdirAll("build", 0o755); err != nil {
 		return err
 	}
 
-	return sh.RunV("go", "test", "-bench=.", "-benchtime=10s", "./bench")
+	return sh.RunV("tinygo", "build", "-gc=custom", "-tags=custommalloc", "-scheduler=none", "-target=wasi", "-o", "build/bench.wasm", "./bench")
 }
 
 var Default = Test
