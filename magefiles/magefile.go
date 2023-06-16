@@ -77,8 +77,6 @@ func Format() error {
 	return nil
 }
 
-var errMissingCopyrightHeaders = errors.New("missing copyright headers, use go run mage.go format")
-
 func Lint() error {
 	if _, err := sh.Exec(map[string]string{}, io.Discard, io.Discard, "go", "run", fmt.Sprintf("github.com/google/addlicense@%s", verAddLicense),
 		"-check",
@@ -89,7 +87,7 @@ func Lint() error {
 		"-ignore", "**/*.yml",
 		"-ignore", "**/*.yaml",
 		"."); err != nil {
-		return errMissingCopyrightHeaders
+		return fmt.Errorf("missing copyright headers, use go run mage.go format: %w", err)
 	}
 
 	return sh.RunV("go", "run", fmt.Sprintf("github.com/golangci/golangci-lint/cmd/golangci-lint@%s", verGolancCILint), "run")
