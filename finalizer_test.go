@@ -1,8 +1,6 @@
 // Copyright wasilibs authors
 // SPDX-License-Identifier: MIT
 
-//go:build nottinygc_finalizer
-
 package nottinygc
 
 import (
