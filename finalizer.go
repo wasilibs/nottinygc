@@ -14,11 +14,21 @@ void free(void* ptr);
 import "C"
 import "unsafe"
 
-var finalizers = map[uintptr]interface{}{}
+var finalizers = map[uint64]interface{}{}
+
+var finalizersIdx = uint64(0)
 
 //go:linkname SetFinalizer runtime.SetFinalizer
 func SetFinalizer(obj interface{}, finalizer interface{}) {
-	finKey := uintptr((*_interface)(unsafe.Pointer(&finalizer)).value)
+	if _, ok := finalizer.(func(interface{})); !ok {
+		// Until function invocation with reflection is supported by TinyGo, we cannot support arbitrary finalizers.
+		// We make a best-effort attempt to support the generic func(interface{}). For other finalizers, we silently
+		// ignore, which would be the behavior for all finalizers with the default allocator.
+		return
+	}
+
+	finalizersIdx++
+	finKey := finalizersIdx
 	finalizers[finKey] = finalizer
 
 	in := (*_interface)(unsafe.Pointer(&obj))
@@ -47,7 +57,7 @@ func onFinalizer(obj unsafe.Pointer, data unsafe.Pointer) {
 	case func(interface{}):
 		f(in)
 	default:
-		panic("currently only finalizers of the form func(interface{}) are supported")
+		panic("BUG: SetFinalizer should have filtered out non-supported finalizer interface")
 	}
 }
 
@@ -58,5 +68,5 @@ type _interface struct {
 
 type registeredFinalizer struct {
 	typecode uintptr
-	finKey   uintptr
+	finKey   uint64
 }
