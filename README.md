@@ -1,6 +1,6 @@
 # nottinygc
 
-nottinygc requires TinyGo 0.27+
+nottinygc requires TinyGo 0.28+
 
 nottinygc is a replacement memory allocator for TinyGo targetting WASI. The default allocator
 is built for small code size which can cause performance issues in higher-scale use cases.
@@ -25,8 +25,6 @@ Additionally, add `-gc=custom` and `-tags=custommalloc` to your TinyGo build fla
 ```bash
 tinygo build -o main.wasm -gc=custom -tags=custommalloc -target=wasi -scheduler=none main.go
 ```
-
-If using TinyGo 0.28+, you will also need to add the `nottinygc_finalizer` build tag.
 
 ### Using with Envoy
 
