@@ -1,0 +1,26 @@
+diff --git a/include/private/gcconfig.h b/include/private/gcconfig.h
+index 6970e6f2..a3af3824 100644
+--- a/include/private/gcconfig.h
++++ b/include/private/gcconfig.h
+@@ -2480,6 +2480,8 @@ EXTERN_C_BEGIN
+ #     endif
+ #     undef USE_MMAP /* similar to Emscripten */
+ #     undef USE_MUNMAP
++      /* The real page size in WebAssembly is 64 KB.    */
++#     define GETPAGESIZE() 65536
+ #     if defined(GC_THREADS) && !defined(CPPCHECK)
+ #       error No threads support yet
+ #     endif
+@@ -3008,10 +3010,10 @@ EXTERN_C_BEGIN
+ 
+ /* Whether GC_page_size is to be set to a value other than page size.   */
+ #if defined(CYGWIN32) && (defined(MPROTECT_VDB) || defined(USE_MUNMAP)) \
+-    || (!defined(ANY_MSWIN) && !defined(USE_MMAP) \
++    || (!defined(ANY_MSWIN) && !defined(WASI) && !defined(USE_MMAP) \
+         && (defined(GC_DISABLE_INCREMENTAL) || defined(DEFAULT_VDB)))
+   /* Cygwin: use the allocation granularity instead.                    */
+-  /* Other than Windows: use HBLKSIZE instead (unless mmap() is used).  */
++  /* Other than Windows or WASI: use HBLKSIZE instead (unless mmap() is used).  */
+ # define ALT_PAGESIZE_USED
+ # ifndef GC_NO_VALLOC
+     /* Nonetheless, we need the real page size is some extra functions. */

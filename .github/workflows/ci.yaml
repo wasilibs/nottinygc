@@ -28,7 +28,7 @@ jobs:
       - name: setup tinygo
         uses: acifani/setup-tinygo@v1
         with:
-          tinygo-version: 0.28.1
+          tinygo-version: 0.29.0
       - name: setup wasmtime for tinygo
         run: go install github.com/wasilibs/tools/cmd/wasmtime@e3baa6a6b2955f731f4490728b09fb87b35e27e9
 
