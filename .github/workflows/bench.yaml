@@ -22,6 +22,6 @@ jobs:
       - name: setup tinygo
         uses: acifani/setup-tinygo@v1
         with:
-          tinygo-version: 0.28.1
+          tinygo-version: 0.29.0
 
       - run: go run mage.go bench
