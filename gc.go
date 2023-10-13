@@ -107,7 +107,7 @@ func allocTyped(allocSz uintptr, layoutSz uintptr, layoutBm uintptr) unsafe.Poin
 	descr := gcDescr(layoutSz, layoutBm)
 
 	itemSz := layoutSz * unsafe.Sizeof(uintptr(0))
-	if itemSz == allocSz {
+	if descr == 0 || itemSz == allocSz {
 		return C.GC_malloc_explicitly_typed(C.uint(allocSz), C.uint(descr))
 	}
 	numItems := allocSz / itemSz
