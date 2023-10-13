@@ -15,6 +15,7 @@ import (
 #include <stddef.h>
 
 void* GC_malloc(unsigned int size);
+void* GC_malloc_atomic(unsigned int size);
 void* GC_malloc_explicitly_typed(unsigned int size, unsigned int gc_descr);
 void* GC_calloc_explicitly_typed(unsigned int nelements, unsigned int element_size, unsigned int gc_descr);
 unsigned int GC_make_descriptor(unsigned int* bm, unsigned int len);
@@ -26,6 +27,9 @@ size_t GC_get_gc_no();
 void GC_get_heap_usage_safe(size_t* heap_size, size_t* free_bytes, size_t* unmapped_bytes, size_t* bytesSinceGC, size_t* totalBytes);
 size_t GC_get_obtained_from_os_bytes();
 void mi_process_info(size_t *elapsed_msecs, size_t *user_msecs, size_t *system_msecs, size_t *current_rss, size_t *peak_rss, size_t *current_commit, size_t *peak_commit, size_t *page_faults);
+
+void GC_ignore_warn_proc(char* msg, unsigned int arg);
+void GC_set_warn_proc(void* p);
 
 void onCollectionEvent();
 */
@@ -59,6 +63,7 @@ func initHeap() {
 	// the bitmap computation in Go, but we need to call it at least once to initialize
 	// typed GC itself.
 	C.GC_make_descriptor(nil, 0)
+	C.GC_set_warn_proc(C.GC_ignore_warn_proc)
 }
 
 // alloc tries to find some free space on the heap, possibly doing a garbage
@@ -105,9 +110,12 @@ func alloc(size uintptr, layoutPtr unsafe.Pointer) unsafe.Pointer {
 
 func allocTyped(allocSz uintptr, layoutSz uintptr, layoutBm uintptr) unsafe.Pointer {
 	descr := gcDescr(layoutSz, layoutBm)
+	if descr == 0 {
+		return C.GC_malloc_atomic(C.uint(allocSz))
+	}
 
 	itemSz := layoutSz * unsafe.Sizeof(uintptr(0))
-	if descr == 0 || itemSz == allocSz {
+	if itemSz == allocSz {
 		return C.GC_malloc_explicitly_typed(C.uint(allocSz), C.uint(descr))
 	}
 	numItems := allocSz / itemSz
