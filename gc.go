@@ -6,6 +6,7 @@
 package nottinygc
 
 import (
+	"math/bits"
 	"runtime"
 	"unsafe"
 )
@@ -14,7 +15,9 @@ import (
 #include <stddef.h>
 
 void* GC_malloc(unsigned int size);
-void* GC_malloc_explicitly_typed(unsigned int size, void* gc_descr);
+void* GC_malloc_explicitly_typed(unsigned int size, unsigned int gc_descr);
+void* GC_calloc_explicitly_typed(unsigned int nelements, unsigned int element_size, unsigned int gc_descr);
+unsigned int GC_make_descriptor(unsigned int* bm, unsigned int len);
 void GC_free(void* ptr);
 void GC_gcollect();
 void GC_set_on_collection_event(void* f);
@@ -32,6 +35,13 @@ const (
 	gcEventStart = 0
 )
 
+const (
+	// CPP_WORDSZ is a simple integer constant representing the word size
+	cppWordsz  = uintptr(unsafe.Sizeof(uintptr(0)) * 8)
+	signb      = uintptr(1) << (cppWordsz - 1)
+	gcDsBitmap = uintptr(1)
+)
+
 //export onCollectionEvent
 func onCollectionEvent(eventType uint32) {
 	switch eventType {
@@ -45,6 +55,10 @@ func onCollectionEvent(eventType uint32) {
 //go:linkname initHeap runtime.initHeap
 func initHeap() {
 	C.GC_set_on_collection_event(C.onCollectionEvent)
+	// We avoid overhead in calling GC_make_descriptor on every allocation by implementing
+	// the bitmap computation in Go, but we need to call it at least once to initialize
+	// typed GC itself.
+	C.GC_make_descriptor(nil, 0)
 }
 
 // alloc tries to find some free space on the heap, possibly doing a garbage
@@ -56,6 +70,13 @@ func alloc(size uintptr, layoutPtr unsafe.Pointer) unsafe.Pointer {
 	// we can try to make this more precise for all types but this should still handle
 	// the common case of large arrays.
 	layout := uintptr(layoutPtr)
+	// We only handle the case where the layout is embedded because it is cheap to
+	// transform into a descriptor for bdwgc. Larger layouts may need to allocate,
+	// and we would want to cache the descriptor, but we cannot use a Go cache in this
+	// function which is runtime.alloc. If we wanted to pass their information to bdwgc
+	// efficiently, we would want LLVM to generate the descriptors in its format.
+	// Because TinyGo uses a byte array for bitmap and bdwgc uses a word array, there are
+	// likely endian issues in trying to use it directly.
 	if layout&1 != 0 {
 		// Layout is stored directly in the integer value.
 		// Determine format of bitfields in the integer.
@@ -73,20 +94,45 @@ func alloc(size uintptr, layoutPtr unsafe.Pointer) unsafe.Pointer {
 		}
 		layoutSz := (layout >> 1) & (1<<sizeFieldBits - 1)
 		layoutBm := layout >> (1 + sizeFieldBits)
-		if layoutSz == 1 && layoutBm == 0 {
-			// No pointers!
-			buf := C.GC_malloc_explicitly_typed(C.uint(size), nil)
-			if buf == nil {
-				panic("out of memory")
-			}
-			return buf
+		buf := allocTyped(size, layoutSz, layoutBm)
+		if buf == nil {
+			panic("out of memory")
 		}
+		return buf
 	}
 	buf := C.GC_malloc(C.uint(size))
 	if buf == nil {
 		panic("out of memory")
 	}
 	return buf
+}
+
+func allocTyped(allocSz uintptr, layoutSz uintptr, layoutBm uintptr) unsafe.Pointer {
+	if layoutSz == 1 && layoutBm == 0 {
+		// No pointers, can use empty descriptor.
+		return C.GC_malloc_explicitly_typed(C.uint(allocSz), 0)
+	}
+
+	descr := gcDescr(layoutSz, layoutBm)
+
+	itemSz := layoutSz * unsafe.Sizeof(uintptr(0))
+	if itemSz == allocSz {
+		return C.GC_malloc_explicitly_typed(C.uint(allocSz), C.uint(descr))
+	}
+	numItems := allocSz / itemSz
+	return C.GC_calloc_explicitly_typed(C.uint(numItems), C.uint(itemSz), C.uint(descr))
+}
+
+// Reimplementation of the simple bitmap case from bdwgc
+// https://github.com/ivmai/bdwgc/blob/806537be2dec4f49056cb2fe091ac7f7d78728a8/typd_mlc.c#L204
+func gcDescr(layoutSz uintptr, layoutBm uintptr) uintptr {
+	if layoutBm == 0 {
+		return 0 // no pointers
+	}
+
+	// reversebits processes all bits but is branchless, unlike a looping version so appears
+	// to perform a little better.
+	return uintptr(bits.Reverse32(uint32(layoutBm))) | gcDsBitmap
 }
 
 //go:linkname free runtime.free
