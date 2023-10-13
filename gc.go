@@ -14,6 +14,7 @@ import (
 #include <stddef.h>
 
 void* GC_malloc(unsigned int size);
+void* GC_malloc_explicitly_typed(unsigned int size, void* gc_descr);
 void GC_free(void* ptr);
 void GC_gcollect();
 void GC_set_on_collection_event(void* f);
@@ -50,7 +51,37 @@ func initHeap() {
 // collection cycle if needed. If no space is free, it panics.
 //
 //go:linkname alloc runtime.alloc
-func alloc(size uintptr, layout unsafe.Pointer) unsafe.Pointer {
+func alloc(size uintptr, layoutPtr unsafe.Pointer) unsafe.Pointer {
+	// For now, provide type information when there are no pointers. In the future,
+	// we can try to make this more precise for all types but this should still handle
+	// the common case of large arrays.
+	layout := uintptr(layoutPtr)
+	if layout&1 != 0 {
+		// Layout is stored directly in the integer value.
+		// Determine format of bitfields in the integer.
+		const layoutBits = uint64(unsafe.Sizeof(layout) * 8)
+		var sizeFieldBits uint64
+		switch layoutBits { // note: this switch should be resolved at compile time
+		case 16:
+			sizeFieldBits = 4
+		case 32:
+			sizeFieldBits = 5
+		case 64:
+			sizeFieldBits = 6
+		default:
+			panic("unknown pointer size")
+		}
+		layoutSz := (layout >> 1) & (1<<sizeFieldBits - 1)
+		layoutBm := layout >> (1 + sizeFieldBits)
+		if layoutSz == 1 && layoutBm == 0 {
+			// No pointers!
+			buf := C.GC_malloc_explicitly_typed(C.uint(size), nil)
+			if buf == nil {
+				panic("out of memory")
+			}
+			return buf
+		}
+	}
 	buf := C.GC_malloc(C.uint(size))
 	if buf == nil {
 		panic("out of memory")
