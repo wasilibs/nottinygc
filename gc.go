@@ -66,9 +66,8 @@ func initHeap() {
 //
 //go:linkname alloc runtime.alloc
 func alloc(size uintptr, layoutPtr unsafe.Pointer) unsafe.Pointer {
-	// For now, provide type information when there are no pointers. In the future,
-	// we can try to make this more precise for all types but this should still handle
-	// the common case of large arrays.
+	var buf unsafe.Pointer
+
 	layout := uintptr(layoutPtr)
 	// We only handle the case where the layout is embedded because it is cheap to
 	// transform into a descriptor for bdwgc. Larger layouts may need to allocate,
@@ -94,13 +93,10 @@ func alloc(size uintptr, layoutPtr unsafe.Pointer) unsafe.Pointer {
 		}
 		layoutSz := (layout >> 1) & (1<<sizeFieldBits - 1)
 		layoutBm := layout >> (1 + sizeFieldBits)
-		buf := allocTyped(size, layoutSz, layoutBm)
-		if buf == nil {
-			panic("out of memory")
-		}
-		return buf
+		buf = allocTyped(size, layoutSz, layoutBm)
+	} else {
+		buf = C.GC_malloc(C.uint(size))
 	}
-	buf := C.GC_malloc(C.uint(size))
 	if buf == nil {
 		panic("out of memory")
 	}
@@ -108,11 +104,6 @@ func alloc(size uintptr, layoutPtr unsafe.Pointer) unsafe.Pointer {
 }
 
 func allocTyped(allocSz uintptr, layoutSz uintptr, layoutBm uintptr) unsafe.Pointer {
-	if layoutSz == 1 && layoutBm == 0 {
-		// No pointers, can use empty descriptor.
-		return C.GC_malloc_explicitly_typed(C.uint(allocSz), 0)
-	}
-
 	descr := gcDescr(layoutSz, layoutBm)
 
 	itemSz := layoutSz * unsafe.Sizeof(uintptr(0))
