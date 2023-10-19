@@ -10,7 +10,7 @@ import "C"
 import "unsafe"
 
 func cmalloc(size uintptr) unsafe.Pointer {
-	return C.malloc(C.ulong(size))
+	return C.malloc(C.size_t(size))
 }
 
 func cfree(ptr unsafe.Pointer) {
