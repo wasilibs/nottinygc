@@ -1,12 +1,12 @@
 // Copyright wasilibs authors
 // SPDX-License-Identifier: MIT
 
-//go:build !windows
-
 package nottinygc
 
 /*
-void* malloc(unsigned int size);
+#include <stddef.h>
+
+void* malloc(size_t size);
 void free(void* ptr);
 */
 import "C"
