@@ -1,10 +1,11 @@
 // Copyright wasilibs authors
 // SPDX-License-Identifier: MIT
 
-//go:build !tinygo
-
 package nottinygc
 
+/*
+#include <stdlib.h>
+*/
 import "C"
 import "unsafe"
 
