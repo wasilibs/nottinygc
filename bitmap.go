@@ -22,10 +22,6 @@ func newBitmap(size uintptr) gcBitmap {
 	return gcBitmap{words: words}
 }
 
-func (b gcBitmap) free() {
-	cfree(unsafe.Pointer(&b.words[0]))
-}
-
 func (b gcBitmap) set(idx uintptr) {
 	b.words[idx/cppWordsz] |= 1 << (idx % cppWordsz)
 }
