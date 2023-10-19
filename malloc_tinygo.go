@@ -1,10 +1,16 @@
 // Copyright wasilibs authors
 // SPDX-License-Identifier: MIT
 
-//go:build !tinygo
+//go:build tinygo
 
 package nottinygc
 
+/*
+#include <stddef.h>
+
+void* malloc(size_t size);
+void free(void* ptr);
+*/
 import "C"
 import "unsafe"
 
