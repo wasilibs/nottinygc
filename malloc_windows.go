@@ -1,12 +1,13 @@
 // Copyright wasilibs authors
 // SPDX-License-Identifier: MIT
 
-//go:build !windows
-
 package nottinygc
 
+// TODO(anuraaga): Remove this file, it currently works around an issue with Windows but
+// there should be a better way.
+
 /*
-void* malloc(unsigned int size);
+void* malloc(unsigned long long);
 void free(void* ptr);
 */
 import "C"
