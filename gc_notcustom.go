@@ -1,7 +1,7 @@
 // Copyright wasilibs authors
 // SPDX-License-Identifier: MIT
 
-//go:build !gc.custom
+//go:build tinygo && !gc.custom
 
 package nottinygc
 

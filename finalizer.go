@@ -8,8 +8,6 @@ package nottinygc
 /*
 void GC_register_finalizer(void* obj, void* fn, void* cd, void** ofn, void** ocn);
 void onFinalizer(void* obj, void* fn);
-void* malloc(unsigned int long);
-void free(void* ptr);
 */
 import "C"
 import "unsafe"
@@ -33,7 +31,7 @@ func SetFinalizer(obj interface{}, finalizer interface{}) {
 
 	in := (*_interface)(unsafe.Pointer(&obj))
 
-	rf := (*registeredFinalizer)(C.malloc(C.ulong(unsafe.Sizeof(registeredFinalizer{}))))
+	rf := (*registeredFinalizer)(cmalloc(unsafe.Sizeof(registeredFinalizer{})))
 	rf.typecode = in.typecode
 	rf.finKey = finKey
 
@@ -42,7 +40,7 @@ func SetFinalizer(obj interface{}, finalizer interface{}) {
 
 //export onFinalizer
 func onFinalizer(obj unsafe.Pointer, data unsafe.Pointer) {
-	defer C.free(data)
+	defer cfree(data)
 
 	rf := (*registeredFinalizer)(data)
 	finalizer := finalizers[rf.finKey]

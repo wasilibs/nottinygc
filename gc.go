@@ -18,7 +18,7 @@ void* GC_malloc(unsigned int size);
 void* GC_malloc_atomic(unsigned int size);
 void* GC_malloc_explicitly_typed(unsigned int size, unsigned int gc_descr);
 void* GC_calloc_explicitly_typed(unsigned int nelements, unsigned int element_size, unsigned int gc_descr);
-unsigned int GC_make_descriptor(unsigned int* bm, unsigned int len);
+unsigned int GC_make_descriptor(void* bm, unsigned int len);
 void GC_free(void* ptr);
 void GC_gcollect();
 void GC_set_on_collection_event(void* f);
@@ -40,11 +40,10 @@ const (
 )
 
 const (
-	// CPP_WORDSZ is a simple integer constant representing the word size
-	cppWordsz  = uintptr(unsafe.Sizeof(uintptr(0)) * 8)
-	signb      = uintptr(1) << (cppWordsz - 1)
 	gcDsBitmap = uintptr(1)
 )
+
+var descriptorCache = newIntMap()
 
 //export onCollectionEvent
 func onCollectionEvent(eventType uint32) {
@@ -98,9 +97,12 @@ func alloc(size uintptr, layoutPtr unsafe.Pointer) unsafe.Pointer {
 		}
 		layoutSz := (layout >> 1) & (1<<sizeFieldBits - 1)
 		layoutBm := layout >> (1 + sizeFieldBits)
-		buf = allocTyped(size, layoutSz, layoutBm)
-	} else {
+		buf = allocSmall(size, layoutSz, layoutBm)
+	} else if layoutPtr == nil {
+		// Unknown layout, assume all pointers.
 		buf = C.GC_malloc(C.uint(size))
+	} else {
+		buf = allocLarge(size, layoutPtr)
 	}
 	if buf == nil {
 		panic("out of memory")
@@ -108,23 +110,45 @@ func alloc(size uintptr, layoutPtr unsafe.Pointer) unsafe.Pointer {
 	return buf
 }
 
-func allocTyped(allocSz uintptr, layoutSz uintptr, layoutBm uintptr) unsafe.Pointer {
-	descr := gcDescr(layoutSz, layoutBm)
-	if descr == 0 {
+func allocSmall(allocSz uintptr, layoutSz uintptr, layoutBm uintptr) unsafe.Pointer {
+	desc := gcDescr(layoutBm)
+	if desc == 0 {
 		return C.GC_malloc_atomic(C.uint(allocSz))
 	}
 
+	return allocTyped(allocSz, layoutSz, desc)
+}
+
+func allocLarge(allocSz uintptr, layoutPtr unsafe.Pointer) unsafe.Pointer {
+	layoutSz := *(*uintptr)(layoutPtr)
+	desc, ok := descriptorCache.get(uintptr(layoutPtr))
+	if !ok {
+		bm := newBitmap(layoutSz)
+		bitsPtr := unsafe.Add(layoutPtr, unsafe.Sizeof(uintptr(0)))
+		for i := uintptr(0); i < layoutSz; i++ {
+			if (*(*uint8)(unsafe.Add(bitsPtr, i/8))>>(i%8))&1 != 0 {
+				bm.set(i)
+			}
+		}
+		desc = uintptr(C.GC_make_descriptor(unsafe.Pointer(&bm.words[0]), C.uint(layoutSz)))
+		descriptorCache.put(uintptr(layoutPtr), desc)
+	}
+
+	return allocTyped(allocSz, layoutSz, desc)
+}
+
+func allocTyped(allocSz uintptr, layoutSz uintptr, desc uintptr) unsafe.Pointer {
 	itemSz := layoutSz * unsafe.Sizeof(uintptr(0))
 	if itemSz == allocSz {
-		return C.GC_malloc_explicitly_typed(C.uint(allocSz), C.uint(descr))
+		return C.GC_malloc_explicitly_typed(C.uint(allocSz), C.uint(desc))
 	}
 	numItems := allocSz / itemSz
-	return C.GC_calloc_explicitly_typed(C.uint(numItems), C.uint(itemSz), C.uint(descr))
+	return C.GC_calloc_explicitly_typed(C.uint(numItems), C.uint(itemSz), C.uint(desc))
 }
 
 // Reimplementation of the simple bitmap case from bdwgc
 // https://github.com/ivmai/bdwgc/blob/806537be2dec4f49056cb2fe091ac7f7d78728a8/typd_mlc.c#L204
-func gcDescr(layoutSz uintptr, layoutBm uintptr) uintptr {
+func gcDescr(layoutBm uintptr) uintptr {
 	if layoutBm == 0 {
 		return 0 // no pointers
 	}
