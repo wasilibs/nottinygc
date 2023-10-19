@@ -8,8 +8,10 @@ import "unsafe"
 
 // Aim for initial over on the order of a few kilobytes.
 
-const initialBuckets = 512
-const numEmbedded = 8
+const (
+	initialBuckets = 512
+	numEmbedded    = 8
+)
 
 type item struct {
 	key uintptr
