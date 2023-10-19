@@ -1,6 +1,8 @@
 // Copyright wasilibs authors
 // SPDX-License-Identifier: MIT
 
+//go:build windows
+
 package nottinygc
 
 // TODO(anuraaga): Remove this file, it currently works around an issue with Windows but
