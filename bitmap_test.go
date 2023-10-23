@@ -26,6 +26,8 @@ func TestBitmap32Bits(t *testing.T) {
 		tc := tc
 		t.Run(fmt.Sprintf("%v", tc), func(t *testing.T) {
 			bm := newBitmap(32)
+			defer bm.free()
+
 			if len(bm.words) != 1 {
 				t.Fatalf("expected 1 word, got %v", len(bm.words))
 			}
@@ -72,6 +74,8 @@ func TestBitmap128Bits(t *testing.T) {
 		tc := tc
 		t.Run(fmt.Sprintf("%v", tc), func(t *testing.T) {
 			bm := newBitmap(128)
+			defer bm.free()
+
 			if cppWordsz == 32 && len(bm.words) != 4 || cppWordsz == 64 && len(bm.words) != 2 {
 				t.Fatalf("got %v words", len(bm.words))
 			}

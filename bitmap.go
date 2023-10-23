@@ -30,6 +30,10 @@ func (b gcBitmap) get(idx uintptr) uintptr {
 	return (b.words[idx/cppWordsz] >> (idx % cppWordsz)) & 1
 }
 
+func (b gcBitmap) free() {
+	cfree(unsafe.Pointer(&b.words[0]))
+}
+
 func gcBitmapSize(size uintptr) uintptr {
 	return (size + cppWordsz - 1) / cppWordsz
 }
