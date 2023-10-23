@@ -112,10 +112,6 @@ func alloc(size uintptr, layoutPtr unsafe.Pointer) unsafe.Pointer {
 
 func allocSmall(allocSz uintptr, layoutSz uintptr, layoutBm uintptr) unsafe.Pointer {
 	desc := gcDescr(layoutBm)
-	if desc == 0 {
-		return C.GC_malloc_atomic(C.uint(allocSz))
-	}
-
 	return allocTyped(allocSz, layoutSz, desc)
 }
 
@@ -139,7 +135,7 @@ func allocLarge(allocSz uintptr, layoutPtr unsafe.Pointer) unsafe.Pointer {
 
 func allocTyped(allocSz uintptr, layoutSz uintptr, desc uintptr) unsafe.Pointer {
 	itemSz := layoutSz * unsafe.Sizeof(uintptr(0))
-	if itemSz == allocSz {
+	if desc == 0 || itemSz == allocSz {
 		return C.GC_malloc_explicitly_typed(C.uint(allocSz), C.uint(desc))
 	}
 	numItems := allocSz / itemSz
