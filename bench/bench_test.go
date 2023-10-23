@@ -42,6 +42,32 @@ func TestExportsMalloc(t *testing.T) {
 	}
 }
 
+func TestProxyWasmDoesNotExportMalloc(t *testing.T) {
+	wasm, err := os.ReadFile(filepath.Join("..", "build", "bench_proxywasm.wasm"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := context.Background()
+	r := wazero.NewRuntime(ctx)
+	wasi_snapshot_preview1.MustInstantiate(ctx, r)
+
+	mod, err := r.InstantiateModuleFromBinary(ctx, wasm)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	malloc := mod.ExportedFunction("malloc")
+	free := mod.ExportedFunction("free")
+
+	if malloc != nil {
+		t.Error("malloc is exported")
+	}
+	if free != nil {
+		t.Error("free is exported")
+	}
+}
+
 func BenchmarkGC(b *testing.B) {
 	tests := []string{"bench.wasm", "benchref.wasm"}
 	for _, tc := range tests {
