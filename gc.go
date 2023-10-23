@@ -124,6 +124,8 @@ func allocLarge(allocSz uintptr, layoutPtr unsafe.Pointer) unsafe.Pointer {
 	desc, ok := descriptorCache.get(uintptr(layoutPtr))
 	if !ok {
 		bm := newBitmap(layoutSz)
+		defer bm.free()
+
 		bitsPtr := unsafe.Add(layoutPtr, unsafe.Sizeof(uintptr(0)))
 		for i := uintptr(0); i < layoutSz; i++ {
 			if (*(*uint8)(unsafe.Add(bitsPtr, i/8))>>(i%8))&1 != 0 {
