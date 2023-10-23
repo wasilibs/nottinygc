@@ -17,6 +17,7 @@ import (
 void* GC_malloc(unsigned int size);
 void* GC_malloc_atomic(unsigned int size);
 void* GC_malloc_explicitly_typed(unsigned int size, unsigned int gc_descr);
+void* GC_malloc_explicitly_typed_ignore_off_page(unsigned int size, unsigned int gc_descr);
 void* GC_calloc_explicitly_typed(unsigned int nelements, unsigned int element_size, unsigned int gc_descr);
 unsigned int GC_make_descriptor(void* bm, unsigned int len);
 void GC_free(void* ptr);
@@ -138,6 +139,12 @@ func allocLarge(allocSz uintptr, layoutPtr unsafe.Pointer) unsafe.Pointer {
 func allocTyped(allocSz uintptr, layoutSz uintptr, desc uintptr) unsafe.Pointer {
 	itemSz := layoutSz * unsafe.Sizeof(uintptr(0))
 	if desc == 0 || itemSz == allocSz {
+		// A bit unsure what the difference is, but it is recommended by bdwgc and seems to make a big
+		// difference in some apps.
+		// https://github.com/ivmai/bdwgc/blob/master/README.md#the-c-interface-to-the-allocator
+		if allocSz >= 100*1024 {
+			return C.GC_malloc_explicitly_typed_ignore_off_page(C.uint(allocSz), C.uint(desc))
+		}
 		return C.GC_malloc_explicitly_typed(C.uint(allocSz), C.uint(desc))
 	}
 	numItems := allocSz / itemSz
