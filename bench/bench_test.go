@@ -42,8 +42,8 @@ func TestExportsMalloc(t *testing.T) {
 	}
 }
 
-func TestProxyWasmDoesNotExportMalloc(t *testing.T) {
-	wasm, err := os.ReadFile(filepath.Join("..", "build", "bench_proxywasm.wasm"))
+func TestEnvoyDoesNotExportMalloc(t *testing.T) {
+	wasm, err := os.ReadFile(filepath.Join("..", "build", "bench_envoy.wasm"))
 	if err != nil {
 		t.Fatal(err)
 	}
