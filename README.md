@@ -32,11 +32,12 @@ This library relies on WASI to implement certain functionality, for which Envoy'
 is incomplete, and in addition, it's ABI, proxy-wasm has design issues that prevent working with
 defaults appropriate for normal TinyGo applications. As this project is commonly used with Envoy,
 we provide a build tag, to work around these issues. If building an Envoy plugin, add
-`-tags=nottinygc_proxywasm` (or combine it with additional tags) to your TinyGo build flags. This
+`-tags=nottinygc_envoy` (or combine it with additional tags) to your TinyGo build flags. This
 will disable export of `malloc`/`free`/ and define a no-op `sched_yield` function.
 
 Other hosts that implement WASI fully, such as [wazero][3] and ABIs with correct memory semantics,
-such as [http-wasm][5], will not have any issue.
+such as [http-wasm][5], will not have any issue. Implementations of proxy-wasm other than Envoy
+may also work fine without the build tag.
 
 ## Performance
 

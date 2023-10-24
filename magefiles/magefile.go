@@ -138,7 +138,7 @@ func buildBenchExecutable() error {
 		return err
 	}
 
-	if err := sh.RunV("tinygo", "build", "-gc=custom", "-tags='custommalloc nottinygc_proxywasm'", "-scheduler=none", "-target=wasi", "-o", "build/bench_proxywasm.wasm", "./bench"); err != nil {
+	if err := sh.RunV("tinygo", "build", "-gc=custom", "-tags='custommalloc nottinygc_envoy'", "-scheduler=none", "-target=wasi", "-o", "build/bench_envoy.wasm", "./bench"); err != nil {
 		return err
 	}
 
