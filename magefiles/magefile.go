@@ -134,7 +134,15 @@ func buildBenchExecutable() error {
 		return err
 	}
 
-	return sh.RunV("tinygo", "build", "-gc=custom", "-tags=custommalloc", "-scheduler=none", "-target=wasi", "-o", "build/bench.wasm", "./bench")
+	if err := sh.RunV("tinygo", "build", "-gc=custom", "-tags=custommalloc", "-scheduler=none", "-target=wasi", "-o", "build/bench.wasm", "./bench"); err != nil {
+		return err
+	}
+
+	if err := sh.RunV("tinygo", "build", "-gc=custom", "-tags='custommalloc nottinygc_proxywasm'", "-scheduler=none", "-target=wasi", "-o", "build/bench_proxywasm.wasm", "./bench"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 var Default = Test
