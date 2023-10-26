@@ -149,7 +149,11 @@ func E2eCoraza() error {
 	if err := sh.RunV("go", "mod", "edit", "-replace=github.com/wasilibs/nottinygc=../.."); err != nil {
 		return err
 	}
-	defer sh.RunV("go", "mod", "edit", "-dropreplace=github.com/wasilibs/nottinygc")
+	defer func() {
+		if err := sh.RunV("go", "mod", "edit", "-dropreplace=github.com/wasilibs/nottinygc"); err != nil {
+			panic(err)
+		}
+	}()
 
 	if err := sh.RunV("go", "run", "mage.go", "build"); err != nil {
 		return err
