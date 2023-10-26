@@ -51,6 +51,10 @@ func E2eCoraza() error {
 }
 
 func E2eEnvoyDispatchCall() error {
+	if err := os.MkdirAll(filepath.Join("e2e", "envoy-dispatch-call", "build"), 0o755); err != nil {
+		return err
+	}
+
 	if err := sh.RunV("tinygo", "build", "-target=wasi", "-gc=custom", "-tags='custommalloc nottinygc_envoy'", "-scheduler=none",
 		"-o", filepath.Join("e2e", "envoy-dispatch-call", "build", "plugin.wasm"), "./e2e/envoy-dispatch-call"); err != nil {
 		return err
