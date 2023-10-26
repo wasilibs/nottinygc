@@ -136,6 +136,26 @@ func E2eHigressGCTest() error {
 		return err
 	}
 
+	type memStats struct {
+		Sys int `json:"Sys"`
+	}
+
+	res, err := http.Get("http://localhost:8080/hello")
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	var stats memStats
+	if err := json.NewDecoder(res.Body).Decode(&stats); err != nil {
+		return err
+	}
+
+	// We expect around 20MB per VM (this reports per VM stat), a conservative
+	// 100MB should be a fine check without flakiness
+	if mem := stats.Sys; mem > 100_000_000 {
+		return fmt.Errorf("expected <100MB memory used, actual: %d", mem)
+	}
+
 	return nil
 }
 
