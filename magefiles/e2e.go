@@ -116,22 +116,22 @@ func E2eHigressGCTest() error {
 	if err := os.MkdirAll(filepath.Join("e2e", "higress-gc-test", "build"), 0o755); err != nil {
 		return err
 	}
-
-	if err := sh.RunV("tinygo", "build", "-target=wasi", "-gc=custom", "-tags='custommalloc nottinygc_envoy'", "-scheduler=none",
-		"-o", filepath.Join("e2e", "higress-gc-test", "build", "plugin.wasm"), "./e2e/higress-gc-test"); err != nil {
-		return err
-	}
-
-	if err := sh.RunV("docker-compose", "--file", filepath.Join("e2e", "higress-gc-test", "docker-compose.yml"), "up", "-d"); err != nil {
-		return err
-	}
-	defer func() {
-		if err := sh.RunV("docker-compose", "--file", filepath.Join("e2e", "higress-gc-test", "docker-compose.yml"), "down", "-v"); err != nil {
-			panic(err)
+	/*
+		if err := sh.RunV("tinygo", "build", "-target=wasi", "-gc=custom", "-tags='custommalloc nottinygc_envoy'", "-scheduler=none",
+			"-o", filepath.Join("e2e", "higress-gc-test", "build", "plugin.wasm"), "./e2e/higress-gc-test"); err != nil {
+			return err
 		}
-	}()
 
-	_, err := e2eLoad("http://localhost:8080/hello", "http://localhost:8082/stats", 1, 10000)
+		if err := sh.RunV("docker-compose", "--file", filepath.Join("e2e", "higress-gc-test", "docker-compose.yml"), "up", "-d"); err != nil {
+			return err
+		}
+		defer func() {
+			if err := sh.RunV("docker-compose", "--file", filepath.Join("e2e", "higress-gc-test", "docker-compose.yml"), "down", "-v"); err != nil {
+				panic(err)
+			}
+		}()
+	*/
+	_, err := e2eLoad("http://localhost:8080/hello", "http://localhost:8082/stats", 4, 10000)
 	if err != nil {
 		return err
 	}
