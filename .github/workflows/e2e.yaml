@@ -30,3 +30,8 @@ jobs:
           tinygo-version: 0.30.0
 
       - run: go run mage.go e2e${{ matrix.target }}
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: logs
+          path: build/logs/

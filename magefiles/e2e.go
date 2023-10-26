@@ -18,6 +18,10 @@ import (
 )
 
 func E2eCoraza() error {
+	if err := os.MkdirAll(filepath.Join("build", "logs"), 0o755); err != nil {
+		return err
+	}
+
 	if _, err := os.Stat(filepath.Join("e2e", "coraza-proxy-wasm")); os.IsNotExist(err) {
 		// Try not pinning version, there should be no compatibility issues causing unexpected failures from a
 		// green coraza build so we get to keep forward coverage this way.
@@ -29,6 +33,17 @@ func E2eCoraza() error {
 	if err := os.Chdir(filepath.Join("e2e", "coraza-proxy-wasm")); err != nil {
 		return err
 	}
+	defer func() {
+		for _, f := range []string{"ftw-envoy.log"} {
+			content, err := os.ReadFile(filepath.Join("build", f))
+			if err != nil {
+				panic(err)
+			}
+			if err := os.WriteFile(filepath.Join("..", "..", "build", "logs", f), content, 0o644); err != nil {
+				panic(err)
+			}
+		}
+	}()
 
 	if err := sh.RunV("go", "mod", "edit", "-replace=github.com/wasilibs/nottinygc=../.."); err != nil {
 		return err
@@ -51,6 +66,10 @@ func E2eCoraza() error {
 }
 
 func E2eEnvoyDispatchCall() error {
+	if err := os.MkdirAll(filepath.Join("build", "logs"), 0o755); err != nil {
+		return err
+	}
+
 	if err := os.MkdirAll(filepath.Join("e2e", "envoy-dispatch-call", "build"), 0o755); err != nil {
 		return err
 	}
