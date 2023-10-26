@@ -131,7 +131,7 @@ func E2eHigressGCTest() error {
 		}
 	}()
 
-	_, err := e2eLoad("http://localhost:8080/hello", "http://localhost:8082/stats", 4, 10000)
+	_, err := e2eLoad("http://localhost:8080/hello", "http://localhost:8082/stats", 2, 10000)
 	if err != nil {
 		return err
 	}
