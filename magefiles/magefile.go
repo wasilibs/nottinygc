@@ -78,7 +78,13 @@ func Format() error {
 }
 
 func Lint() error {
-	if _, err := sh.Exec(map[string]string{}, os.Stdout, os.Stderr, "go", "run", fmt.Sprintf("github.com/google/addlicense@%s", verAddLicense),
+	env := map[string]string{}
+	for _, e := range os.Environ() {
+		if k, v, ok := strings.Cut(e, "="); ok {
+			env[k] = v
+		}
+	}
+	if _, err := sh.Exec(env, io.Discard, io.Discard, "go", "run", fmt.Sprintf("github.com/google/addlicense@%s", verAddLicense),
 		"-check",
 		"-c", "wasilibs authors",
 		"-s=only",
