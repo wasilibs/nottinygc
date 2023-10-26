@@ -1,0 +1,12 @@
+services:
+  envoy:
+    image: ${ENVOY_IMAGE:-envoyproxy/envoy:v1.28-latest}
+    command:
+      - -c
+      - /conf/envoy-config.yaml
+    volumes:
+      - ./build:/build
+      - .:/conf
+    ports:
+    - 8080:8080
+    - 8082:8082

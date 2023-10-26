@@ -18,10 +18,6 @@ import (
 )
 
 func E2eCoraza() error {
-	if err := os.MkdirAll(filepath.Join("build", "logs"), 0o755); err != nil {
-		return err
-	}
-
 	if _, err := os.Stat(filepath.Join("e2e", "coraza-proxy-wasm")); os.IsNotExist(err) {
 		// Try not pinning version, there should be no compatibility issues causing unexpected failures from a
 		// green coraza build so we get to keep forward coverage this way.
@@ -66,10 +62,6 @@ func E2eCoraza() error {
 }
 
 func E2eEnvoyDispatchCall() error {
-	if err := os.MkdirAll(filepath.Join("build", "logs"), 0o755); err != nil {
-		return err
-	}
-
 	if err := os.MkdirAll(filepath.Join("e2e", "envoy-dispatch-call", "build"), 0o755); err != nil {
 		return err
 	}
@@ -88,7 +80,7 @@ func E2eEnvoyDispatchCall() error {
 		}
 	}()
 
-	stats, err := e2eLoad("http://localhost:8080/status/200", "http://localhost:8082/stats")
+	stats, err := e2eLoad("http://localhost:8080/status/200", "http://localhost:8082/stats", 40, 5000)
 	if err != nil {
 		return err
 	}
@@ -120,6 +112,53 @@ func E2eEnvoyDispatchCall() error {
 	return nil
 }
 
+func E2eHigressGCTest() error {
+	if err := os.MkdirAll(filepath.Join("e2e", "higress-gc-test", "build"), 0o755); err != nil {
+		return err
+	}
+
+	if err := sh.RunV("tinygo", "build", "-target=wasi", "-gc=custom", "-tags='custommalloc nottinygc_envoy'", "-scheduler=none",
+		"-o", filepath.Join("e2e", "higress-gc-test", "build", "plugin.wasm"), "./e2e/higress-gc-test"); err != nil {
+		return err
+	}
+
+	if err := sh.RunV("docker-compose", "--file", filepath.Join("e2e", "higress-gc-test", "docker-compose.yml"), "up", "-d"); err != nil {
+		return err
+	}
+	defer func() {
+		if err := sh.RunV("docker-compose", "--file", filepath.Join("e2e", "higress-gc-test", "docker-compose.yml"), "down", "-v"); err != nil {
+			panic(err)
+		}
+	}()
+
+	_, err := e2eLoad("http://localhost:8080/hello", "http://localhost:8082/stats", 2, 10000)
+	if err != nil {
+		return err
+	}
+
+	type memStats struct {
+		Sys int `json:"Sys"`
+	}
+
+	res, err := http.Get("http://localhost:8080/hello")
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	var stats memStats
+	if err := json.NewDecoder(res.Body).Decode(&stats); err != nil {
+		return err
+	}
+
+	// We expect around 20MB per VM (this reports per VM stat), a conservative
+	// 100MB should be a fine check without flakiness
+	if mem := stats.Sys; mem > 100_000_000 {
+		return fmt.Errorf("expected <100MB memory used, actual: %d", mem)
+	}
+
+	return nil
+}
+
 type counterStat struct {
 	Name  string `json:"name"`
 	Value int    `json:"value"`
@@ -130,7 +169,7 @@ type counterStats struct {
 }
 
 // If needed, we can try being more sophisticated later but run some simple load for now.
-func e2eLoad(url string, statsURL string) (*counterStats, error) {
+func e2eLoad(url string, statsURL string, p int, n int) (*counterStats, error) {
 	wg := sync.WaitGroup{}
 
 	var success atomic.Uint32
@@ -154,8 +193,6 @@ func e2eLoad(url string, statsURL string) (*counterStats, error) {
 		return nil, errors.New("failed to get healthy in 100 attempts")
 	}
 
-	p := 40
-	n := 5000
 	for i := 0; i < p; i++ {
 		wg.Add(1)
 		go func() {
@@ -192,4 +229,10 @@ func e2eLoad(url string, statsURL string) (*counterStats, error) {
 	}
 
 	return &stats, nil
+}
+
+func init() {
+	if err := os.MkdirAll(filepath.Join("build", "logs"), 0o755); err != nil {
+		panic(err)
+	}
 }
