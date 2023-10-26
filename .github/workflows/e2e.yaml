@@ -34,5 +34,5 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: logs
+          name: ${{ matrix.target }}-logs
           path: build/logs/
