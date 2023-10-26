@@ -33,6 +33,7 @@ jobs:
       - run: go run mage.go e2e${{ matrix.target }}
 
       - uses: actions/upload-artifact@v3
+        if: failure()
         with:
           name: ${{ matrix.target }}-logs
           path: build/logs/
