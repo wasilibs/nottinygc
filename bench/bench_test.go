@@ -26,7 +26,7 @@ func TestExportsMalloc(t *testing.T) {
 	r := wazero.NewRuntime(ctx)
 	wasi_snapshot_preview1.MustInstantiate(ctx, r)
 
-	mod, err := r.InstantiateModuleFromBinary(ctx, wasm)
+	mod, err := r.Instantiate(ctx, wasm)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +52,7 @@ func TestEnvoyDoesNotExportMalloc(t *testing.T) {
 	r := wazero.NewRuntime(ctx)
 	wasi_snapshot_preview1.MustInstantiate(ctx, r)
 
-	mod, err := r.InstantiateModuleFromBinary(ctx, wasm)
+	mod, err := r.Instantiate(ctx, wasm)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +82,7 @@ func BenchmarkGC(b *testing.B) {
 		r := wazero.NewRuntime(ctx)
 		wasi_snapshot_preview1.MustInstantiate(ctx, r)
 
-		mod, err := r.InstantiateModuleFromBinary(ctx, wasm)
+		mod, err := r.Instantiate(ctx, wasm)
 		if err != nil {
 			b.Fatal(err)
 		}

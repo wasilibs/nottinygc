@@ -78,12 +78,13 @@ func Format() error {
 }
 
 func Lint() error {
-	if _, err := sh.Exec(map[string]string{}, io.Discard, io.Discard, "go", "run", fmt.Sprintf("github.com/google/addlicense@%s", verAddLicense),
+	if _, err := sh.Exec(map[string]string{}, os.Stdout, os.Stderr, "go", "run", fmt.Sprintf("github.com/google/addlicense@%s", verAddLicense),
 		"-check",
 		"-c", "wasilibs authors",
 		"-s=only",
 		"-l=mit",
 		"-y=",
+		"-ignore", ".idea/**",
 		"-ignore", "**/*.yml",
 		"-ignore", "**/*.yaml",
 		"."); err != nil {
@@ -127,43 +128,6 @@ func Bench() error {
 	}
 
 	return sh.RunV("go", "test", "-bench=.", "-benchtime=10s", "./bench")
-}
-
-func E2eCoraza() error {
-	if err := os.MkdirAll("e2e", 0o755); err != nil {
-		return err
-	}
-
-	if _, err := os.Stat(filepath.Join("e2e", "coraza-proxy-wasm")); os.IsNotExist(err) {
-		// Try not pinning version, there should be no compatibility issues causing unexpected failures from a
-		// green coraza build so we get to keep forward coverage this way.
-		if err := sh.RunV("git", "clone", "https://github.com/corazawaf/coraza-proxy-wasm.git", filepath.Join("e2e", "coraza-proxy-wasm")); err != nil {
-			return err
-		}
-	}
-
-	if err := os.Chdir(filepath.Join("e2e", "coraza-proxy-wasm")); err != nil {
-		return err
-	}
-
-	if err := sh.RunV("go", "mod", "edit", "-replace=github.com/wasilibs/nottinygc=../.."); err != nil {
-		return err
-	}
-	defer func() {
-		if err := sh.RunV("go", "mod", "edit", "-dropreplace=github.com/wasilibs/nottinygc"); err != nil {
-			panic(err)
-		}
-	}()
-
-	if err := sh.RunV("go", "run", "mage.go", "build"); err != nil {
-		return err
-	}
-
-	if err := sh.RunV("go", "run", "mage.go", "ftw"); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func buildBenchExecutable() error {
