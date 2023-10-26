@@ -80,7 +80,7 @@ func E2eEnvoyDispatchCall() error {
 		}
 	}()
 
-	stats, err := e2eLoad("http://localhost:8080/status/200", "http://localhost:8082/stats")
+	stats, err := e2eLoad("http://localhost:8080/status/200", "http://localhost:8082/stats", 40, 50000)
 	if err != nil {
 		return err
 	}
@@ -142,7 +142,7 @@ func E2eHigressGCTest() error {
 		}
 	}()
 
-	_, err := e2eLoad("http://localhost:8080/hello", "http://localhost:8082/stats")
+	_, err := e2eLoad("http://localhost:8080/hello", "http://localhost:8082/stats", 10, 200000)
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ type counterStats struct {
 }
 
 // If needed, we can try being more sophisticated later but run some simple load for now.
-func e2eLoad(url string, statsURL string) (*counterStats, error) {
+func e2eLoad(url string, statsURL string, p int, n int) (*counterStats, error) {
 	wg := sync.WaitGroup{}
 
 	var success atomic.Uint32
@@ -184,8 +184,6 @@ func e2eLoad(url string, statsURL string) (*counterStats, error) {
 		return nil, errors.New("failed to get healthy in 100 attempts")
 	}
 
-	p := 40
-	n := 5000
 	for i := 0; i < p; i++ {
 		wg.Add(1)
 		go func() {
