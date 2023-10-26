@@ -78,12 +78,13 @@ func Format() error {
 }
 
 func Lint() error {
-	if _, err := sh.Exec(map[string]string{}, io.Discard, io.Discard, "go", "run", fmt.Sprintf("github.com/google/addlicense@%s", verAddLicense),
+	if _, err := sh.Exec(map[string]string{}, os.Stdout, os.Stderr, "go", "run", fmt.Sprintf("github.com/google/addlicense@%s", verAddLicense),
 		"-check",
 		"-c", "wasilibs authors",
 		"-s=only",
 		"-l=mit",
 		"-y=",
+		"-ignore", ".idea/**",
 		"-ignore", "**/*.yml",
 		"-ignore", "**/*.yaml",
 		"."); err != nil {
