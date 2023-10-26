@@ -1,0 +1,21 @@
+apiVersion: extensions.istio.io/v1alpha1
+kind: WasmPlugin
+metadata:
+  name: wasm-plugin
+  namespace: example
+spec:
+  imagePullPolicy: Always
+  # match:
+  #   - mode: SERVER # does not work on ingress, but only for app pod side car
+  pluginConfig:
+    auth_authority: example.example.svc.cluster.local
+    auth_cluster_name: outbound|8080||example.example.svc.cluster.local
+    auth_timeout_ms: 50
+  selector:
+    matchLabels:
+      app: istio-ingressgateway
+  url: https://[redacted-s3location]/main.wasm
+  vmConfig:
+    env:
+      - name: POD_NAMESPACE
+        valueFrom: HOST
