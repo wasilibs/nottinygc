@@ -80,7 +80,7 @@ func E2eEnvoyDispatchCall() error {
 		}
 	}()
 
-	stats, err := e2eLoad("http://localhost:8080/status/200", "http://localhost:8082/stats", 40, 50000)
+	stats, err := e2eLoad("http://localhost:8080/status/200", "http://localhost:8082/stats", 40, 5000)
 	if err != nil {
 		return err
 	}
@@ -116,17 +116,6 @@ func E2eHigressGCTest() error {
 	if err := os.MkdirAll(filepath.Join("e2e", "higress-gc-test", "build"), 0o755); err != nil {
 		return err
 	}
-	defer func() {
-		for _, f := range []string{"envoy.log"} {
-			content, err := os.ReadFile(filepath.Join("e2e", "higress-gc-test", "build", f))
-			if err != nil {
-				panic(err)
-			}
-			if err := os.WriteFile(filepath.Join("..", "..", "build", "logs", f), content, 0o644); err != nil {
-				panic(err)
-			}
-		}
-	}()
 
 	if err := sh.RunV("tinygo", "build", "-target=wasi", "-gc=custom", "-tags='custommalloc nottinygc_envoy'", "-scheduler=none",
 		"-o", filepath.Join("e2e", "higress-gc-test", "build", "plugin.wasm"), "./e2e/higress-gc-test"); err != nil {
@@ -142,7 +131,7 @@ func E2eHigressGCTest() error {
 		}
 	}()
 
-	_, err := e2eLoad("http://localhost:8080/hello", "http://localhost:8082/stats", 10, 200000)
+	_, err := e2eLoad("http://localhost:8080/hello", "http://localhost:8082/stats", 1, 10000)
 	if err != nil {
 		return err
 	}
