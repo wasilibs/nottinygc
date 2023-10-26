@@ -118,7 +118,7 @@ func E2eHigressGCTest() error {
 	}
 	defer func() {
 		for _, f := range []string{"envoy.log"} {
-			content, err := os.ReadFile(filepath.Join("build", f))
+			content, err := os.ReadFile(filepath.Join("e2e", "higress-gc-test", "build", f))
 			if err != nil {
 				panic(err)
 			}
