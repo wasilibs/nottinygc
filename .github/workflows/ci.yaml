@@ -35,3 +35,5 @@ jobs:
         if: ${{ startsWith(matrix.os, 'ubuntu-') }}
 
       - run: go run mage.go test
+
+      - run: go run mage.go e2eGzip
