@@ -6,5 +6,6 @@ use (
 	.
 	./bench
 	./e2e/envoy-dispatch-call
+	./e2e/gzip
 	./e2e/higress-gc-test
 )

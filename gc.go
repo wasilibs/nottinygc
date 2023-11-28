@@ -46,7 +46,7 @@ const (
 	gcDsBitmap = uintptr(1)
 )
 
-var descriptorCache = newIntMap()
+var descriptorCache intMap
 
 //export onCollectionEvent
 func onCollectionEvent(eventType uint32) {
@@ -60,6 +60,8 @@ func onCollectionEvent(eventType uint32) {
 //
 //go:linkname initHeap runtime.initHeap
 func initHeap() {
+	descriptorCache = newIntMap()
+
 	C.GC_set_on_collection_event(C.onCollectionEvent)
 	// We avoid overhead in calling GC_make_descriptor on every allocation by implementing
 	// the bitmap computation in Go, but we need to call it at least once to initialize

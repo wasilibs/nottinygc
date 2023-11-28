@@ -6,7 +6,7 @@ package nottinygc
 import "testing"
 
 func TestIntMapBasic(t *testing.T) {
-	m := newIntMap()
+	var m intMap
 	_, ok := m.get(5)
 	if ok {
 		t.Fatal("expected not ok in empty map")
@@ -24,7 +24,7 @@ func TestIntMapBasic(t *testing.T) {
 
 func TestIntMapNoResize(t *testing.T) {
 	top := int(0.75 * 512)
-	m := newIntMap()
+	var m intMap
 	for i := 0; i < top; i++ {
 		m.put(uintptr(i), uintptr(i))
 	}
@@ -50,7 +50,7 @@ func TestIntMapNoResize(t *testing.T) {
 
 func TestIntMapResize(t *testing.T) {
 	top := 512
-	m := newIntMap()
+	var m intMap
 	for i := 0; i < top; i++ {
 		m.put(uintptr(i), uintptr(i))
 	}

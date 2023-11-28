@@ -1,0 +1,4 @@
+github.com/magefile/mage v1.14.0 h1:6QDX3g6z1YvJ4olPhT1wksUcSa/V0a1B+pJb73fBjyo=
+github.com/magefile/mage v1.14.0/go.mod h1:z5UZb/iS3GoOSn0JgWuiw7dxlurVYTu+/jHXqQg881A=
+github.com/wasilibs/nottinygc v0.7.0 h1:x8PiLXMHiSx8v4MgyL8T4LEp0FqrPtqZDsveI9xiY3M=
+github.com/wasilibs/nottinygc v0.7.0/go.mod h1:oDcIotskuYNMpqMF23l7Z8uzD4TC0WXHK8jetlB3HIo=

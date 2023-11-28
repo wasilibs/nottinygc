@@ -159,6 +159,23 @@ func E2eHigressGCTest() error {
 	return nil
 }
 
+func E2eGzip() error {
+	if err := os.MkdirAll(filepath.Join("e2e", "gzip", "build"), 0o755); err != nil {
+		return err
+	}
+
+	if err := sh.RunV("tinygo", "build", "-target=wasi", "-gc=custom", "-tags='custommalloc'", "-scheduler=none",
+		"-o", filepath.Join("e2e", "gzip", "build", "main.wasm"), "./e2e/gzip"); err != nil {
+		return err
+	}
+
+	if err := sh.RunV("wasmtime", filepath.Join("e2e", "gzip", "build", "main.wasm")); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 type counterStat struct {
 	Name  string `json:"name"`
 	Value int    `json:"value"`
