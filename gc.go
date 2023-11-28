@@ -78,13 +78,6 @@ func alloc(size uintptr, layoutPtr unsafe.Pointer) unsafe.Pointer {
 	var buf unsafe.Pointer
 
 	layout := uintptr(layoutPtr)
-	// We only handle the case where the layout is embedded because it is cheap to
-	// transform into a descriptor for bdwgc. Larger layouts may need to allocate,
-	// and we would want to cache the descriptor, but we cannot use a Go cache in this
-	// function which is runtime.alloc. If we wanted to pass their information to bdwgc
-	// efficiently, we would want LLVM to generate the descriptors in its format.
-	// Because TinyGo uses a byte array for bitmap and bdwgc uses a word array, there are
-	// likely endian issues in trying to use it directly.
 	if layout&1 != 0 {
 		// Layout is stored directly in the integer value.
 		// Determine format of bitfields in the integer.
