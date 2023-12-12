@@ -5,15 +5,13 @@ FROM ghcr.io/webassembly/wasi-sdk:wasi-sdk-20
 
 RUN apt-get -y update && apt-get -y install curl patch
 
-RUN mkdir -p /bdwgc && curl -L https://github.com/ivmai/bdwgc/archive/1d9826992aa2a2783c9badbacddae70fdf7fffee.tar.gz | tar -xz --strip-components 1 -C /bdwgc
+RUN mkdir -p /bdwgc && curl -L https://github.com/ivmai/bdwgc/archive/a753bcb459649d20331d9c9f1dba94588ef56829.tar.gz | tar -xz --strip-components 1 -C /bdwgc
 WORKDIR /bdwgc
 ADD bdwgc.patch bdwgc.patch
 RUN patch -p1 < bdwgc.patch
 RUN ./autogen.sh
 
-# While signals aren't actually used the header file is included unconditionally. We can enable the header file
-# without linking the actual signals library because the functions aren't called.
-ENV CFLAGS -O3 -D_WASI_EMULATED_SIGNAL ${CFLAGS}
+ENV CFLAGS -O3 ${CFLAGS}
 
 # host is required by configure but not used so set it arbitrarily
 RUN ./configure --disable-threads --disable-shared --disable-gcj-support --disable-java-finalization --disable-atomic-uncollectible --host=i686-pc-linux-gnu
