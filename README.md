@@ -2,6 +2,8 @@
 
 nottinygc requires TinyGo 0.28+
 
+_nottinygc has reached end-of-life. The Go compiler [will support][6] wasmexport soon so should compile most binaries, including proxy-wasm. As soon as gotip includes it, this repository will be archived, and until then, it is recommended to pause rather than gamble on this bandaid._
+
 nottinygc is a replacement memory allocator for TinyGo targetting WASI. The default allocator
 is built for small code size which can cause performance issues in higher-scale use cases.
 nottinygc replaces it with [bdwgc][1] for garbage collection and [mimalloc][2] for standard
@@ -63,3 +65,4 @@ possibly due to fragmentation, whereas this library will continue to run indefin
 [3]: https://github.com/tetratelabs/wazero
 [4]: https://github.com/wasilibs/nottinygc/actions/workflows/bench.yaml
 [5]: https://http-wasm.io/
+[6]: https://github.com/golang/go/issues/65199
