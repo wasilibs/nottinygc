@@ -1,8 +1,11 @@
+_nottinygc was an interesting experiment to bring OK performance to Wasm binaries compiled with Go.
+But there are fundamental issues with using GC languages in a sandboxed environment like Wasm - this
+still applies even after the Wasm GC proposal, and is even worse before it. The wasilibs recommendation
+is to use a non-GC language such as C++, Rust, or similar, when compiling to Wasm and to not use Go._
+
 # nottinygc
 
 nottinygc requires TinyGo 0.28+
-
-_nottinygc has reached end-of-life. The Go compiler [will support][6] wasmexport soon so should compile most binaries, including proxy-wasm. As soon as gotip includes it, this repository will be archived, and until then, it is recommended to pause rather than gamble on this bandaid._
 
 nottinygc is a replacement memory allocator for TinyGo targetting WASI. The default allocator
 is built for small code size which can cause performance issues in higher-scale use cases.
